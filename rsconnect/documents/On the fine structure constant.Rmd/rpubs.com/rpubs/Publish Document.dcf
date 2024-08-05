@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/1208724/714bed87639f4e3d9d5e4e5bf66ec953
+bundleId: https://api.rpubs.com/api/v1/document/1208724/714bed87639f4e3d9d5e4e5bf66ec953
+url: http://rpubs.com/EduardoWF/1208724
+version: 1
