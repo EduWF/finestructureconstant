@@ -335,8 +335,6 @@ These precise measurements of the fine structure constant are essential for test
 
 The bootstrapped mean shows high consistency in the data, with very narrow confidence intervals. Both the parametric and non-parametric tests suggest a statistically significant difference from the fine structure constant. While the measurements are precise, their mean and median values do not align perfectly with the fine structure constant. However, the Wilcoxon test results indicate that at a 99% confidence level, we cannot conclusively reject the null hypothesis.
 
-Here's a draft of a section you can incorporate into your report to address the limitations of the study:
-
 #### Limitations
 
 While the statistical analyses presented in this report provide insights, it is crucial to acknowledge certain limitations inherent to it. First and foremost, the sample size is extremely small (n = 7). This limited sample size raises concerns about the statistical power of the analysis and the generalizability of the findings to the broader phenomenon of vacuum fluctuations and their potential connection to the fine structure constant. 
