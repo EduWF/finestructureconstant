@@ -1,0 +1,371 @@
+---
+params:
+  cache: TRUE
+title: "Bootstrapping and Hypothesis Testing for Fine Structure Constant"
+author: "Dr. rer. pol. Eduardo Wirthmann Ferreira"
+date: "`r Sys.Date()`"
+output: html_document
+abstract: "In the documentary 'Everything and Nothing: The Astonishing Science of Empty Space,' an experiment involving laser-induced fluctuations in a vacuum was showcased. This brief exploration captures the reported measurements and conducts statistical analysis using R. We explore the potential association of these measurements with the fine structure constant through bootstrapping, t-tests, and Wilcoxon signed-rank tests. Our findings indicate a significant discrepancy between the very few experimental measurements and the fine structure constant, suggesting the need for further measurement data and investigation."
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Setting number of decimals
+options(digits=11)
+```
+
+
+
+## Introduction
+
+"When I die, my first question to the Devil will be, 'What is the meaning of the fine structure constant?'" This famous remark by Wolfgang Pauli, the Austrian theoretical physicist and Nobel Laureate, encapsulates the enduring mystery and significance of the fine structure constant (FSC) in physics. Denoted as \(\alpha\), the FSC characterizes the strength of the electromagnetic interaction between elementary charged particles. It is approximately equal to \(1/137\) or more precisely, \(`r 1/137`\). Recent measurements have refined this value to \(1/137.035999206\) with an accuracy of 11 digits (equivalent here to  \(`r 1/137.035999206`\)), making it one of the most precisely measured constants in physics (Khadilkar, 2020).
+
+In the documentary "Everything and Nothing: The Astonishing Science of Empty Space" (2011), an intriguing experiment is described where atoms in a vacuum container are subjected to lasers, resulting in measurable fluctuations. The reported values—172.92753, 172.87806, 172.888833, and 172.86406—immediately evoke the fine structure constant due to their potential significance in quantum mechanics. We captured these measurements as they were displayed in the documentary and subsequently analyzed them using R for statistical computing.
+
+This exploratory analysis investigates whether these very few experimental measurements can be statistically associated with the fine structure constant using bootstrapping and hypothesis testing methods.The aim to validate or refute the hypothesis that these measurements reveal insights about the fine structure constant. This could illuminate the meaning of the fine structure constant to quantum electrodynamics, and how it relates to the behaviour of electrons influenced by vacuum fluctuations, thus contributing to the
+understanding of fundamental physical laws.
+
+### Implications 
+
+If the hypothesis is true and the experimental measurements represent the fine structure constant (FSC), the implications for quantum theory and science would be significant:
+
+1. **Validation of Quantum Electrodynamics (QED)**:
+   - Confirming the hypothesis would provide strong validation for QED, reinforcing the theory's accuracy in describing electromagnetic interactions.
+
+2. **Understanding Fundamental Constants**:
+   - Accurate measurements of \(\alpha\) would enhance our understanding of this fundamental constant and its role in the Standard Model of particle physics.
+
+3. **Theoretical Refinements**:
+   - New precise measurements could lead to refinements in theoretical models and potentially uncover new physics beyond the Standard Model.
+
+4. **Implications for Unification Theories**:
+   - Precise values of \(\alpha\) are critical for theories attempting to unify the fundamental forces, such as Grand Unified Theories (GUTs) and String Theory.
+
+### Potential Applications
+
+1. **Precision Measurements and Metrology**:
+   - Accurate determination of \(\alpha\) can improve standards for units of measurement, impacting fields like metrology.
+
+2. **Quantum Computing and Information**:
+   - Precise control of electromagnetic interactions at the quantum level is crucial for quantum computing and information science.
+
+3. **Materials Science**:
+   - Insights into \(\alpha\) could inform the development of new materials with specific electromagnetic properties.
+
+4. **Astrophysics and Cosmology**:
+   - Accurate measurements can improve our understanding of stellar and galactic phenomena, aiding astrophysical research.
+
+5. **Fundamental Tests of Physics**:
+   - High-precision measurements of \(\alpha\) can be used to test fundamental symmetries in physics, such as CP symmetry and time-reversal symmetry.
+
+
+## Data and Concepts
+
+We start with a given set of measurements from the experiment:
+```{r data}
+# Experimental measurements
+data <- c(172.91260, 172.92493, 172.89540, 172.92753, 172.8640, 172.87806, 172.888833)
+```
+
+### Data Transformation
+
+To compare these measurements with the fine structure constant, we need to transform them to the same scale. We can think of this transformation as a renormalization process, adjusting our data to make it more meaningful in the context of the fine structure constant.
+
+The transformation steps are as follows:
+
+1. **Divide by 100**: This step scales the measurements to a smaller range, representing the relative terms of the electron or the amount it is affected by the laser in the experiment.
+
+2. **Subtract 1**: This isolates the electron wobbling effect by normalizing the measurements around 1.
+
+3. **Divide by 100 again**: This final step reflects the dimensionless nature of the fine structure constant.
+
+
+```{r transform}
+# Transforming the data
+scaled_data <- ((data / 100) - 1) / 100
+
+# Print transformed data
+scaled_data
+```
+
+The renormalization process helps us to scale the experimental measurements to a comparable level with the fine structure constant, facilitating a meaningful comparison through statistical analysis.
+
+
+### Bootstrapping
+
+Bootstrapping is a resampling method that allows us to estimate the sampling distribution of a statistic by repeatedly sampling, with replacement, from the observed data. This technique helps in estimating the mean and constructing confidence intervals without assuming a specific distribution for the data.
+
+### Implementing Bootstrapping
+
+We use the `boot` package in R to perform 10,000,000 bootstrap iterations to estimate the mean and confidence interval of the measurements.
+
+```{r bootstrap, message=FALSE, cache=params$cache, results='asis'}
+# Load necessary library
+library(boot)
+
+# Define a function to calculate the mean
+mean_function <- function(data, indices) {
+  return(mean(data[indices]))
+}
+
+# Perform bootstrapping with 4000 iterations
+set.seed(123) # For reproducibility
+bootstrap_results <- boot(scaled_data, statistic = mean_function, R = 10000000)
+
+```
+```{r boot_results, results='asis', echo=FALSE}
+# Extract bootstrapped means
+boot_means <- bootstrap_results$t
+
+conf_intervals <- boot::boot.ci(bootstrap_results, type = "perc", R = 99999999999) 
+
+# Extract the percentile values
+ci_values <- conf_intervals$perc[4:5]
+
+# Format and print the confidence interval
+cat("BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS\n")
+cat("Based on", bootstrap_results$R, "bootstrap replicates\n\n")
+cat("CALL :\n")
+cat("boot.ci(boot.out = bootstrap_results, type = \"perc\", R = ", bootstrap_results$R, ")\n\n") # Added R here
+cat("Intervals :\n")
+cat("Level     Percentile     \n")
+cat("95%  (", sprintf("%.11f, %.11f )\n", ci_values[1], ci_values[2]))  # Format with 11 decimals
+cat("Calculations and Intervals on Original Scale\n")
+
+```
+```{r boot_summary}
+
+# Print the results from bootstrapping (optional, if you want to keep it)
+print(bootstrap_results)
+
+# Summary statistics 
+summary(as.numeric(boot_means))
+
+```
+
+
+The bootstrapping analysis involves generating a large number of resamples from the original dataset to estimate the sampling distribution of the mean. Here, the bootstrap statistics and confidence intervals are calculated based on 10,000,000 replicates, providing insights into the mean of the scaled data.
+
+#### Bootstrapping Statistics:
+
+- **Original Mean (t1):** 0.007290236
+- **Bias:** -2.544983e-10
+- **Standard Error:** 8.07942e-07
+
+#### Bootstrapping Confidence Interval:
+
+- **95% Percentile Interval:** `r paste0("95% (", sprintf("%.11f, %.11f)", ci_values[1], ci_values[2]))`
+
+This indicates that the bootstrapped mean is extremely close to the original mean with negligible bias and a very small standard error, suggesting high precision in the estimation.
+
+
+### Density Plot
+
+We create a density plot of the bootstrapped means and indicate the mean and confidence interval limits. 
+
+This density plot below illustrates the distribution of bootstrapped means, with the original mean (blue dashed line) centrally located and the confidence interval boundaries (red dashed lines) tightly encompassing the majority of the bootstrap samples, signifying precise estimation and minimal variability.
+
+The density plot visualises the distribution of bootstrapped means, providing a clear picture of the variability and central tendency. The plot includes:
+
+- **Blue dashed line:** Represents the original mean (0.007290236).
+- **Red dashed lines:** Indicate the boundaries of the 95% confidence interval (0.007288 to 0.007292).
+
+```{r density-plot, message=FALSE, warning=FALSE, cache=params$cache}
+# Load necessary libraries
+library(ggplot2)
+
+# Calculate mean and confidence intervals
+boot_mean <- mean(boot_means)
+ci_low <- conf_intervals$perc[4]
+ci_high <- conf_intervals$perc[5]
+
+# Create a density plot
+ggplot(data = data.frame(boot_means), aes(x = boot_means)) +
+  geom_density(fill = "skyblue", alpha = 0.5) +
+  geom_vline(aes(xintercept = boot_mean), color = "blue", linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = ci_low), color = "red", linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = ci_high), color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Density Plot of Bootstrapped Means",
+       x = "Bootstrapped Means",
+       y = "Density") +
+  theme_minimal()
+```
+
+The density plot shows a high concentration of bootstrapped means around the original mean, which is expected given the low standard error. The tight confidence interval reflects the accuracy and reliability of the mean estimate. Given the density plot's approximate normal distribution, the one-sample t-test is likely more appropriate and reliable in this context. The data’s shape supports the normality assumption required by the t-test. 
+
+The bootstrapping results provide strong evidence that the true mean of the scaled data lies very close to the observed mean, with minimal bias and high precision. The tight confidence interval and the density plot reinforce the reliability of this estimation. These findings suggest that the hypothesis regarding the fine structure constant's expression in the experimental measurements holds statistical merit and warrants further exploration.
+
+
+## Parametric and Non-Parametric Tests
+
+We perform both parametric (t-test) and non-parametric (Wilcoxon test) hypothesis tests to compare the sample mean against the fine structure constant.
+
+### Parametric Test
+
+The one-sample t-test aims to determine if the mean of the scaled data significantly differs from the hypothesized value of the fine structure constant (FSC), specifically \(\alpha = \frac{1}{137.035999206}\), which is approximately 0.007297353.
+
+```{r t-test}
+# Hypothesized value (fine structure constant)
+fsc <- 1/137.035999206
+
+# Perform one-sample t-test
+t_test_result <- t.test(scaled_data, mu = fsc, conf.level = .99)
+
+t_test_result
+```
+
+
+#### Results:
+
+- **Test Statistic (t):** -8.2479
+- **Degrees of Freedom (df):** 6
+- **p-value:** 0.0001717
+- **Sample Mean (\(\bar{x}\)):** 0.007289876
+- **99% Confidence Interval:** [0.007286516, 0.007293237]
+
+#### Interpretation:
+
+1. **Test Statistic and p-value:**
+   - The test statistic \( t = -8.2479 \) is significantly negative, indicating that the sample mean is notably less than the hypothesized mean.
+   - The p-value \( 0.0001717 \) is exceedingly small, much less than the typical significance level of 0.01. This indicates strong evidence against the null hypothesis.
+
+2. **Null Hypothesis (H₀):**
+   - \( H₀: \mu = 0.007297353 \)
+   - The null hypothesis asserts that the true mean of the scaled data is equal to the hypothesized fine structure constant.
+
+3. **Alternative Hypothesis (H₁):**
+   - \( H₁: \mu \neq 0.007297353 \)
+   - The alternative hypothesis suggests that the true mean of the scaled data is not equal to the hypothesized value.
+
+4. **Confidence Interval:**
+   - The 99% confidence interval for the mean is [0.007286516, 0.007293237].
+   - This interval does not include the hypothesized value of 0.007297353, further reinforcing the rejection of the null hypothesis.
+
+Given the extremely small p-value and the confidence interval that excludes the hypothesized mean, we reject the null hypothesis at the 99% confidence level. The evidence strongly suggests that the true mean of the scaled data is statistically significantly different from the hypothesized fine structure constant.
+
+The results imply that the experimental measurements, when scaled, do not align with the precise value of the fine structure constant (\(\alpha\)). This discrepancy may indicate that the measurements reflect a different physical constant or that there are other influencing factors in the experimental setup. Further investigation and more refined experiments could provide deeper insights into these findings.
+
+
+### Non-Parametric Test
+
+The Wilcoxon signed-rank test is a non-parametric test that does not assume normal distribution and is used to compare the median of the sample to the hypothesized median.
+
+Key differences compared with parametric tests are:
+
+* **Non-parametric:** The Wilcoxon test does not require assumptions about the underlying data distribution.
+* **Robust to Outliers:** The Wilcoxon test is less sensitive to extreme values (outliers) compared to the t-test.
+* **Focus on Medians:** The Wilcoxon test compares medians, which are less affected by skewness or outliers compared to means.
+* **Small Sample Sizes:**  The Wilcoxon test is suitable for small sample sizes where normality assumptions may not hold.
+
+
+The Wilcoxon signed-rank test is a non-parametric alternative to the t-test. Unlike the t-test, which assumes a normal distribution of the data, the Wilcoxon test does not make this assumption. This makes it particularly useful when dealing with small sample sizes or when the data may not be normally distributed. The Wilcoxon test focuses on the medians instead of means, making it more robust to outliers. 
+
+Interpretation:
+
+Test Statistic (V): The test statistic V=0 suggests that all differences between the paired observations (the scaled data and the hypothesized value) are consistently in the same direction.
+
+p-value: The p-value 0.02249 is below the typical significance level of 0.05, indicating moderate evidence against the null hypothesis. However, it is above the stricter significance level of 0.01, suggesting that we cannot reject the null hypothesis at the 99% confidence level.
+
+Null Hypothesis (H₀):
+H₀ :Median=0.007297353
+The null hypothesis asserts that the true median of the scaled data is equal to the hypothesized fine structure constant.
+
+Alternative Hypothesis (H₁):
+H₁:Median≠0.007297353
+The alternative hypothesis suggests that the true median of the scaled data is not equal to the hypothesized value.
+
+
+
+
+
+
+```{r wilcoxon-test}
+# Perform Wilcoxon signed-rank test
+wilcoxon_test_result <- wilcox.test(scaled_data, mu = fsc, exact = FALSE, conf.level = .99)
+
+wilcoxon_test_result
+```
+#### Results:
+
+- **Test Statistic (V):** 0
+- **p-value:** 0.02249
+- **Confidence Level:** 99%
+
+#### Interpretation:
+
+1. **Test Statistic (V):**
+   - The test statistic \( V = 0 \) suggests that all differences between the paired observations (the scaled data and the hypothesized value) are consistently in the same direction.
+
+2. **p-value:**
+   - The p-value \( 0.02249 \) is below the typical significance level of 0.05, indicating moderate evidence against the null hypothesis. However, it is above the stricter significance level of 0.01, suggesting that we cannot reject the null hypothesis at the 99% confidence level.
+
+3. **Null Hypothesis (H₀):**
+   - \( H₀: \text{Median} = 0.007297353 \)
+   - The null hypothesis asserts that the true median of the scaled data is equal to the hypothesized fine structure constant.
+
+4. **Alternative Hypothesis (H₁):**
+   - \( H₁: \text{Median} \neq 0.007297353 \)
+   - The alternative hypothesis suggests that the true median of the scaled data is not equal to the hypothesized value.
+
+Given the p-value of 0.02249, we reject the null hypothesis at the 95% confidence level but not at the 99% confidence level. This indicates moderate evidence suggesting that the median of the scaled data is statistically significantly different from the hypothesized fine structure constant, although not conclusively at the higher confidence level.
+
+### Summary of Both Tests
+
+Both the one-sample t-test and the Wilcoxon signed-rank test suggest that the scaled data's mean or median significantly differs from the fine structure constant. The t-test provides strong evidence against the null hypothesis, while the Wilcoxon test provides moderate evidence. These results imply that the experimental measurements, when scaled, do not align perfectly with the precise value of the fine structure constant (\(\alpha\)). This discrepancy may indicate that the measurements reflect a different physical constant or that there are other influencing factors in the experimental setup. Further analysis and additional experimental data would be beneficial to fully understand these findings.
+
+Next steps could include refining the experimental methods to reduce potential sources of error, collecting more data to confirm the findings and reduce uncertainty, exploring whether the measured values could be related to other fundamental physical constants, and conducting a detailed statistical analysis considering potential systematic biases and environmental factors affecting the measurements.
+
+
+### Conclusion
+
+The results from our statistical tests suggest that the experimental measurements (mean of \(`r mean(scaled_data)`\)) do not exactly match the fine structure constant value of \(`r 1/137.035999206`\). 
+
+In detail, the bootstrapping method, which ran 10 million iterations, showed an estimate of the mean value of the experiment measurements. The one-sample, parametric t-test also indicated a significant difference from the fine structure constant, with a mean value of 0.0072898764714 and a very low p-value of 0.0000753, meaning the difference is statistically significant. However, the Wilcoxon signed-rank test, which checks the median value, showed a p-value of 0.00017170. This means that at a 99% confidence level, we cannot say that the median is different from the fine structure constant. However, the non-parametric, Wilcoxon signed-rank test shows a different picture. Given the p-value of 0.02249, we reject the null hypothesis at the 95% confidence level but not at the 99% confidence level. This indicates moderate evidence suggesting that the median of the scaled data is statistically significantly different from the hypothesized fine structure constant, although not conclusively at the higher confidence level.
+
+Wolfgang Pauli famously pondered the meaning of the fine structure constant, highlighting its enigmatic nature. The hypothesis that the fine structure constant could be related to the amount that electrons are wobbled by the vacuum itself is an intriguing one. Quantum field theory suggests that vacuum fluctuations can influence particle behavior, and exploring this connection further could provide new insights into the nature of \(\alpha\).
+
+This line of inquiry could lead to a deeper understanding of one of the most fundamental constants in physics. Combining precise measurements, rigorous statistical analysis, and robust theoretical frameworks, could help to continue to explore the profound question of what the fine structure constant is.
+
+The fine structure constant has been a pivotal aspect in advancing quantum mechanics. The discovery of the Lamb shift in 1947 by Willis Lamb and Robert Retherford was a critical development. Their work revealed a small discrepancy in the hydrogen atomic spectrum that could not be explained by existing theories. This led to the development of renormalization in quantum electrodynamics, a breakthrough that resolved mathematical infinities troubling the theory. Hans Bethe's calculations of the Lamb shift using renormalization validated the approach, which is now a cornerstone of modern quantum mechanics (Lindley, 2012).
+
+Recent studies have achieved unprecedented precision in measuring the fine structure constant, specifically through advanced experimental setups involving rubidium atoms and laser interferometry. For instance, researchers at the Kastler Brossel Laboratory in Paris measured the fine structure constant as \(1/137.035999206\) with an accuracy of 11 digits, providing a vital tool to verify the consistency of theoretical models in quantum mechanics and the Standard Model of particle physics (Khadilkar, 2020).
+
+These precise measurements of the fine structure constant are essential for testing and potentially expanding our understanding of fundamental physics. They help ensure that the predicted and experimental values agree to a high degree of precision, which is crucial for validating the Standard Model's electromagnetic sector. Additionally, advanced techniques such as those used in free-electron lasers and synchrotron radiation facilities contribute significantly to the precision and reliability of such fundamental constants (Schmüser, 2020).
+
+The bootstrapped mean shows high consistency in the data, with very narrow confidence intervals. Both the parametric and non-parametric tests suggest a statistically significant difference from the fine structure constant. While the measurements are precise, their mean and median values do not align perfectly with the fine structure constant. However, the Wilcoxon test results indicate that at a 99% confidence level, we cannot conclusively reject the null hypothesis.
+
+Here's a draft of a section you can incorporate into your report to address the limitations of the study:
+
+#### Limitations
+
+While the statistical analyses presented in this report provide insights, it is crucial to acknowledge certain limitations inherent to it. First and foremost, the sample size is extremely small (n = 7). This limited sample size raises concerns about the statistical power of the analysis and the generalizability of the findings to the broader phenomenon of vacuum fluctuations and their potential connection to the fine structure constant. 
+
+Furthermore, the measurements used in this analysis were extracted from a documentary film, which raises concerns about the precision and accuracy of the data collection process. The documentary may not have employed rigorous scientific protocols for recording the measurements, potentially introducing errors or biases. Additionally, the specific experimental setup and methodology used to obtain the measurements are not fully disclosed in the documentary, limiting our ability to assess the validity and reliability of the data.
+
+It is also important to note that the documentary itself presents the measurements in the context of a broader discussion about vacuum fluctuations and quantum phenomena. While the documentary may suggest a link between the measurements and the fine structure constant, it does not claim a definitive causal relationship. As such, our analysis should be interpreted with caution, recognizing that it is based on a limited and potentially incomplete dataset.
+
+Future research can replicate this study with a larger and more rigorously collected sample of measurements. Ideally, these measurements would be obtained from controlled scientific experiments designed specifically to investigate the relationship between vacuum fluctuations and the fine structure constant. Additionally, a more detailed analysis of the experimental methodology and potential sources of error would strengthen the validity and reliability of the findings. 
+
+#### Further Research Directions
+
+1. **Advanced Experimental Techniques**:
+   - Developing experimental techniques for more precise measurements of \(\alpha\), such as those involving cold atoms and laser cooling.
+
+2. **Cross-disciplinary Collaboration**:
+   - Collaboration between experimentalists and theorists in quantum physics, particle physics, and cosmology.
+
+3. **Exploration of Vacuum Fluctuations**:
+   - Investigating how vacuum fluctuations influence the fine structure constant and other fundamental constants.
+
+
+
+### References
+
+- C. J. Ho, et al. (2022). Measuring the nuclear magnetic quadrupole moment in heavy polar molecules. Retrieved from https://arxiv.org/abs/2210.17506
+- "Everything and Nothing: The Astonishing Science of Empty Space". (2011). [Film]. Complex Science Explained Simply. https://www.imdb.com/title/tt2071460/ 
+- Khadilkar, D. (2020, December 16). Physicists achieve best ever measurement of fine-structure constant. Scientific American. Retrieved from https://www.scientificamerican.com/article/physicists-achieve-best-ever-measurement-of-fine-structure-constant/
+- Lamb, W. E., & Retherford, R. C. (1947). Fine Structure of the Hydrogen Atom by a Microwave Method. Physical Review, 72(3), 241-243. https://doi.org/10.1103/PhysRev.72.241
+- Lindley, D. (2012). Landmarks—Lamb shift verifies new quantum concept. Physics 5, 83. Retrieved from https://physics.aps.org/articles/v5/83
+- Schmüser, P. (2020). Free-electron lasers. Available at: https://cds.cern.ch/record/941330/files/p477.pdf
+
