@@ -31,7 +31,7 @@ Future research should aim to:
 ## Repository Contents
 
 * `On the fine structure constant.Rmd`: RMarkdown file containing the data analysis and statistical tests. Used to generate the report and analysis.
-* `On-the-fine-structure-constant.html`: HTML output of the analysis report ( generated from the Rmd file).
+* `On-the-fine-structure-constant.html`: HTML output of the analysis report (generated from the Rmd file) and also available at https://rpubs.com/EduardoWF/1208724.
 * `README.md`: This file, providing an overview of the project.
 * `References`: Folder containing reference materials for the project.
 
